@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer with Navigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #pdf-container {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PDF viewer container -->
+    <div id="pdf-container"></div>
+
+    <!-- Controls for navigation and download -->
+    <div class="controls">
+        <button id="prevPage">Previous</button>
+        <button id="nextPage">Next</button>
+        <button id="downloadPdf">Download PDF</button>
+    </div>
+
+    <!-- Include PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+    <script>
+        const pdfUrl = 'mydocs.pdf'; // The PDF file is in the same directory as your HTML file
+        let pdfDoc = null;
+        let currentPage = 1;
+        let totalPages = 0;
+
+        // Set up PDF.js
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            renderPage(currentPage); // Render the first page
+        }).catch(function(error) {
+            console.error('Error loading PDF: ', error);
+        });
+
+        // Render a specific page
+        function renderPage(pageNum) {
+            pdfDoc.getPage(pageNum).then(function(page) {
+                const scale = 1.5; // Set zoom level
+                const viewport = page.getViewport({ scale: scale });
+
+                // Create a canvas to render the page
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Clear previous canvas content
+                document.getElementById('pdf-container').innerHTML = '';
+                document.getElementById('pdf-container').appendChild(canvas);
+
+                // Render the page into the canvas
+                page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                });
+            });
+        }
+
+        // Navigation buttons
+        document.getElementById('prevPage').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', function() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+        });
+
+        // Download button
+        document.getElementById('downloadPdf').addEventListener('click', function() {
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = 'mydocs.pdf'; // This is the name of the downloaded file
+            link.click();
+        });
+    </script>
+</body>
+</html>
